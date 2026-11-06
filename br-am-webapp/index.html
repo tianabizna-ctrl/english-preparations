@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="en-GB">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>British &amp; American English Learner</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <nav>
+    <span class="logo">🇬🇧 ↔ 🇺🇸 BrE / AmE</span>
+    <button class="nav-btn active" data-view="home">Home</button>
+    <button class="nav-btn" data-view="vocabulary">Vocabulary</button>
+    <button class="nav-btn" data-view="fluency">Fluency</button>
+    <button class="nav-btn" data-view="drill">Speed Drill</button>
+    <button class="nav-btn" data-view="progress">Progress</button>
+  </nav>
+
+  <main>
+    <!-- HOME VIEW -->
+    <section id="view-home" class="view active">
+      <div class="card">
+        <h2>Welcome to the British &amp; American English Learner</h2>
+        <p>Practise your fluency and accuracy across both dialects. Choose a section below to begin.</p>
+      </div>
+      <div class="category-grid">
+        <div class="category-card" onclick="App.navigate('vocabulary', 'spelling')">
+          <div class="icon">✏️</div>
+          <h3>Spelling</h3>
+          <p>colour vs color, centre vs center…</p>
+        </div>
+        <div class="category-card" onclick="App.navigate('vocabulary', 'vocabulary')">
+          <div class="icon">📖</div>
+          <h3>Vocabulary</h3>
+          <p>lift vs elevator, biscuit vs cookie…</p>
+        </div>
+        <div class="category-card" onclick="App.navigate('vocabulary', 'grammar')">
+          <div class="icon">📝</div>
+          <h3>Grammar</h3>
+          <p>have got vs have, at vs on the weekend…</p>
+        </div>
+        <div class="category-card" onclick="App.navigate('fluency')">
+          <div class="icon">💬</div>
+          <h3>Conversations</h3>
+          <p>Read dialogues and answer questions</p>
+        </div>
+        <div class="category-card" onclick="App.navigate('drill')">
+          <div class="icon">⚡</div>
+          <h3>Speed Drill</h3>
+          <p>Rapid-fire translation practice</p>
+        </div>
+        <div class="category-card" onclick="App.navigate('progress')">
+          <div class="icon">📊</div>
+          <h3>Your Progress</h3>
+          <p>Track what you have learnt</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- VOCABULARY VIEW -->
+    <section id="view-vocabulary" class="view">
+      <div class="card">
+        <h2>Vocabulary Reference</h2>
+        <p>Browse British–American word pairs by category.</p>
+      </div>
+      <div class="filter-tabs" id="vocab-filters"></div>
+      <div class="card">
+        <ul class="vocab-list" id="vocab-list"></ul>
+      </div>
+    </section>
+
+    <!-- FLUENCY VIEW (conversations + quizzes) -->
+    <section id="view-fluency" class="view">
+      <div class="card">
+        <h2>Fluency Practice — Conversations</h2>
+        <p>Read each dialogue carefully, then answer the comprehension questions to test your accuracy.</p>
+      </div>
+      <div id="conversations-container"></div>
+    </section>
+
+    <!-- SPEED DRILL VIEW -->
+    <section id="view-drill" class="view">
+      <div class="card">
+        <h2>Speed Drill — Accuracy Under Pressure</h2>
+        <p>Convert words between British and American English as fast as you can. You have 60 seconds!</p>
+      </div>
+      <div class="card drill-area" id="drill-area">
+        <div id="drill-start-screen">
+          <p style="margin-bottom:1rem;">Choose your direction:</p>
+          <button class="btn btn-primary" onclick="App.startDrill('br-to-am')" style="margin:0.25rem;">British → American</button>
+          <button class="btn btn-outline" onclick="App.startDrill('am-to-br')" style="margin:0.25rem;">American → British</button>
+        </div>
+        <div id="drill-game-screen" style="display:none;">
+          <div class="drill-timer" id="drill-timer">60</div>
+          <div class="drill-score" id="drill-score-display">Score: 0</div>
+          <div class="drill-hint" id="drill-direction-hint"></div>
+          <div class="drill-prompt" id="drill-prompt"></div>
+          <div class="drill-input-row">
+            <input type="text" id="drill-input" placeholder="Type your answer…" autocomplete="off">
+            <button class="btn btn-success" id="drill-submit" onclick="App.checkDrill()">Check</button>
+          </div>
+          <div id="drill-feedback" style="font-weight:600;min-height:1.5rem;"></div>
+        </div>
+        <div id="drill-end-screen" style="display:none;">
+          <h3 style="margin-bottom:0.5rem;">Time is up!</h3>
+          <div class="drill-score" id="drill-final-score"></div>
+          <p id="drill-final-msg" style="margin-bottom:1rem;color:var(--text-light);"></p>
+          <button class="btn btn-primary" onclick="App.resetDrill()">Try Again</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- PROGRESS VIEW -->
+    <section id="view-progress" class="view">
+      <div class="card">
+        <h2>Your Progress</h2>
+        <p>Keep practising to improve your scores!</p>
+      </div>
+      <div class="stat-grid" id="stat-grid"></div>
+      <div class="card">
+        <h3>Vocabulary Mastery</h3>
+        <div class="progress-bar-container">
+          <div class="progress-bar-fill" id="vocab-progress" style="width:0%"></div>
+        </div>
+        <p id="vocab-progress-text" style="font-size:0.85rem;color:var(--text-light);"></p>
+      </div>
+      <div class="card">
+        <h3>Conversation Quizzes</h3>
+        <div class="progress-bar-container">
+          <div class="progress-bar-fill" id="quiz-progress" style="width:0%"></div>
+        </div>
+        <p id="quiz-progress-text" style="font-size:0.85rem;color:var(--text-light);"></p>
+      </div>
+      <div class="card">
+        <h3>Best Speed Drill Score</h3>
+        <div id="best-drill-score" style="font-size:2rem;font-weight:700;color:var(--accent);text-align:centre;padding:1rem 0;"></div>
+      </div>
+      <div style="text-align:centre;margin-top:1rem;">
+        <button class="btn btn-danger" onclick="App.clearProgress()">Reset All Progress</button>
+      </div>
+    </section>
+  </main>
+
+  <script src="data/vocabulary.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>

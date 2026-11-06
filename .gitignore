@@ -1,0 +1,27 @@
+# macOS
+.DS_Store
+
+# Local AI/agent harness state
+.claude/
+
+# Dependencies
+node_modules/
+
+# Build outputs
+dist/
+desktop/dist/
+android/build/
+android/app/build/
+android/.gradle/
+*.apk
+*.dmg
+*.exe
+*.zip
+
+# Logs
+*.log
+npm-debug.log*
+
+# Environment / secrets
+.env
+.env.*

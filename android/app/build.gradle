@@ -1,0 +1,47 @@
+plugins {
+    id 'com.android.application'
+}
+
+android {
+    namespace 'com.easyenglish.mianatra'
+    // Compiled against the newest installed platform; targetSdk stays at 34 so
+    // runtime behaviour (and the WebView layout) is unchanged.
+    compileSdk 35
+
+    defaultConfig {
+        applicationId "com.easyenglish.mianatra"
+        minSdk 21
+        targetSdk 34
+        versionCode 1
+        versionName "1.0.0"
+    }
+
+    buildTypes {
+        release {
+            minifyEnabled false
+            shrinkResources false
+            proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
+        }
+    }
+
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_17
+        targetCompatibility JavaVersion.VERSION_17
+    }
+
+    // Give installers a user-facing product name instead of Gradle's
+    // implementation name (app-debug.apk).
+    applicationVariants.all { variant ->
+        variant.outputs.all { output ->
+            output.outputFileName = "Easy English ${variant.versionName}.apk"
+        }
+    }
+}
+
+// Keep a single source of truth: copy the web app into assets before each build.
+tasks.register('syncWeb', Copy) {
+    from rootProject.file('../app')
+    into layout.projectDirectory.dir('src/main/assets/www')
+    exclude '**/.DS_Store'
+}
+tasks.named('preBuild') { dependsOn 'syncWeb' }

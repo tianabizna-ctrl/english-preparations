@@ -1,0 +1,506 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <meta name="format-detection" content="telephone=no" />
+  <meta name="description" content="Easy English — a complete Beginner to Advanced English course for Malagasy learners, with phonics, grammar, vocabulary, reading, writing, listening, speaking, projects, and review." />
+  <meta name="theme-color" content="#0f766e" />
+  <meta name="mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta name="apple-mobile-web-app-title" content="Easy English" />
+  <title>Easy English — Complete English Course</title>
+  <link rel="manifest" href="manifest.webmanifest" />
+  <link rel="icon" href="favicon.ico" sizes="any" />
+  <link rel="icon" type="image/png" href="icons/favicon-32.png" sizes="32x32" />
+  <link rel="icon" type="image/png" href="icons/favicon-16.png" sizes="16x16" />
+  <link rel="apple-touch-icon" href="icons/apple-touch-icon.png" />
+  <script>
+    /* Apply the saved theme / text size before first paint to avoid a flash. */
+    (function () {
+      try {
+        var s = JSON.parse(localStorage.getItem('easyEnglishSettings') || '{}');
+        var choice = s.theme || 'system';
+        var dark = choice === 'dark' ||
+          (choice === 'system' && window.matchMedia &&
+            window.matchMedia('(prefers-color-scheme: dark)').matches);
+        document.documentElement.setAttribute('data-theme', dark ? 'dark' : 'light');
+        if (s.textSize) document.documentElement.setAttribute('data-textsize', s.textSize);
+        if (s.malagasyHints === false || s.learningLevel === 'intermediate' || s.learningLevel === 'advanced') document.documentElement.setAttribute('data-mg', 'off');
+        if (s.reduceMotion) document.documentElement.setAttribute('data-motion', 'reduce');
+      } catch (e) {
+        document.documentElement.setAttribute('data-theme', 'light');
+      }
+    })();
+  </script>
+  <link rel="stylesheet" href="styles.css" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Merriweather:wght@400;700&display=swap" rel="stylesheet" />
+</head>
+<body>
+
+  <div class="app-shell">
+
+    <!-- ═══ SIDEBAR (desktop) ══════════════════════════════════════════ -->
+    <aside class="sidebar" aria-label="Sections">
+      <div class="sidebar-brand">
+        <span class="logo">EN</span>
+        <div class="brand-text">
+          <strong>Easy English</strong>
+          <span>Mianatra Anglisy</span>
+        </div>
+      </div>
+
+      <nav class="sidebar-nav" id="sidebarNav" aria-label="Main navigation">
+        <p class="nav-group-title">Learn</p>
+        <button class="nav-tab side-item active" data-view="today"><span class="ni">🎯</span><span class="nl">Practice</span><span class="nm">Fampiofanana</span></button>
+        <button class="nav-tab side-item" data-view="syllabus"><span class="ni">🧭</span><span class="nl">Curriculum</span><span class="nm">Fandaharam-pianarana</span></button>
+        <button class="nav-tab side-item" data-view="vocabulary"><span class="ni">📚</span><span class="nl">Useful vocabulary</span><span class="nm">Voambolana</span></button>
+        <button class="nav-tab side-item" data-view="alphabet"><span class="ni">🔤</span><span class="nl">Alphabet &amp; essentials</span><span class="nm">Abidia</span></button>
+        <button class="nav-tab side-item" data-view="classroom"><span class="ni">🏫</span><span class="nl">Classroom English</span><span class="nm">Teny baiko</span></button>
+        <button class="nav-tab side-item" data-view="conversations"><span class="ni">💬</span><span class="nl">Conversations</span><span class="nm">Resadresaka</span></button>
+
+        <p class="nav-group-title">Skills</p>
+        <button class="nav-tab side-item" data-view="grammar"><span class="ni">📖</span><span class="nl">Grammar</span><span class="nm">Fitsipi-pitenenana</span></button>
+        <button class="nav-tab side-item" data-view="irregular-verbs"><span class="ni">🔁</span><span class="nl">Irregular verbs</span><span class="nm">Matoanteny miova</span></button>
+        <button class="nav-tab side-item" data-view="reading"><span class="ni">📰</span><span class="nl">Reading</span><span class="nm">Famakiana</span></button>
+        <button class="nav-tab side-item" data-view="writing"><span class="ni">✏️</span><span class="nl">Writing</span><span class="nm">Fanoratana</span></button>
+        <button class="nav-tab side-item" data-view="drills"><span class="ni">🧩</span><span class="nl">Drills</span><span class="nm">Fanazaran-tena</span></button>
+        <button class="nav-tab side-item" data-view="listening"><span class="ni">🎧</span><span class="nl">Listening</span><span class="nm">Fihainoana</span></button>
+        <button class="nav-tab side-item" data-view="speaking"><span class="ni">🗣️</span><span class="nl">Speaking</span><span class="nm">Fitenenana</span></button>
+
+        <p class="nav-group-title">Faith</p>
+        <button class="nav-tab side-item" data-view="devotional"><span class="ni">🕊️</span><span class="nl">Daily devotional</span><span class="nm">Fandalinana Baiboly</span></button>
+
+        <p class="nav-group-title">You</p>
+        <button class="nav-tab side-item" data-view="progress"><span class="ni">📊</span><span class="nl">Progress</span><span class="nm">Fandrosoana</span></button>
+      </nav>
+
+      <div class="sidebar-foot">
+        <button class="side-item side-action" id="sidebarSettingsBtn"><span class="ni">⚙️</span><span class="nl">Settings</span></button>
+      </div>
+    </aside>
+
+    <!-- ═══ MAIN COLUMN ════════════════════════════════════════════════ -->
+    <div class="app-main">
+
+      <header class="appbar">
+        <div class="appbar-left">
+          <span class="appbar-logo" aria-hidden="true">EN</span>
+          <div class="appbar-heading">
+            <h1 class="appbar-title" id="viewTitle">Practice</h1>
+            <span class="appbar-sub" id="viewSub">Fampiofanana</span>
+          </div>
+        </div>
+        <div class="appbar-right">
+          <div class="stats" aria-label="Your score">
+            <span class="stat" title="Stars earned">⭐ <span id="starCount">0</span></span>
+            <span class="stat" title="Daily streak">🔥 <span id="streakCount">0</span></span>
+            <span class="stat" title="Saved words">🔖 <span id="savedCount">0</span></span>
+          </div>
+          <button class="icon-btn" id="themeToggleBtn" type="button" aria-label="Switch day / night theme" title="Switch day / night theme">
+            <span id="themeToggleIcon">🌙</span>
+          </button>
+          <button class="icon-btn" id="settingsBtn" type="button" aria-label="Open settings" title="Settings">⚙️</button>
+        </div>
+      </header>
+
+      <section class="course-bar" id="courseBar" aria-label="Current course level">
+        <div class="course-bar-copy">
+          <span class="course-bar-kicker">Your English course</span>
+          <strong id="courseBarTitle">Beginner</strong>
+          <span id="courseBarStage">Primary Year 1 · UN Level I foundation</span>
+        </div>
+        <div class="course-bar-level" id="globalLevelPicker" aria-label="Change course level"></div>
+        <div class="course-bar-progress">
+          <span id="courseBarProgress">0 / 10 units</span>
+          <div class="course-bar-track"><span id="courseBarTrackFill"></span></div>
+        </div>
+        <button class="btn btn-outline btn-sm course-bar-map" id="courseBarMapBtn" type="button">Open curriculum</button>
+      </section>
+
+      <div class="content-scroll" id="contentScroll">
+        <main id="app">
+
+          <!-- ─── TODAY ─────────────────────────────────────────────── -->
+          <section id="view-today" class="view active" aria-labelledby="todayTitle">
+            <div class="view-header">
+              <h2 id="todayTitle">Practice</h2>
+               <p class="view-desc">Follow your level’s complete course: learn the language, practise all four skills, and check what you can do.</p>
+            </div>
+            <div class="study-level-picker" id="studyLevelPicker" aria-label="Choose your study level"></div>
+            <div class="lesson-picker" id="lessonPicker" aria-label="Choose a lesson topic"></div>
+            <section class="home-welcome" aria-labelledby="welcomeTitle">
+              <div class="welcome-copy">
+                <span class="welcome-kicker">Mianatra Anglisy · Learn English</span>
+                <h2 id="welcomeTitle">Small steps. Confident English.</h2>
+                 <p>Work through a structured English course from first sounds to confident academic and professional communication.</p>
+                <div class="welcome-actions">
+                  <button class="btn btn-light" type="button" data-quick-view="vocabulary">📚 Learn words</button>
+                  <button class="btn btn-light" type="button" data-quick-view="classroom">🏫 Speak in class</button>
+                  <button class="btn btn-light" type="button" data-quick-view="speaking">🗣️ Practise speaking</button>
+                </div>
+              </div>
+              <div class="welcome-art" aria-hidden="true"><span>EN</span><i>🌱</i><b>+2 ⭐</b></div>
+            </section>
+            <div id="todayContent"></div>
+          </section>
+
+          <!-- ─── SYLLABUS ──────────────────────────────────────────── -->
+          <section id="view-syllabus" class="view" aria-labelledby="syllabusTitle">
+            <div class="view-header">
+               <h2 id="syllabusTitle">Curriculum</h2>
+               <p class="view-desc">Track your stage, continue the current unit, and follow every lesson from Beginner to Advanced.</p>
+            </div>
+            <div class="syllabus-selector" id="syllabusSelector" aria-label="Choose a syllabus level"></div>
+            <div id="syllabusContent"></div>
+          </section>
+
+          <!-- ─── VOCABULARY ────────────────────────────────────────── -->
+          <section id="view-vocabulary" class="view">
+            <div class="view-header">
+              <h2>Useful vocabulary</h2>
+              <p class="view-desc">Find everyday English words by topic, hear them aloud, and mark them as learned.</p>
+            </div>
+            <div id="vocabToolkit" class="vocab-toolkit"></div>
+
+            <div class="toolbar">
+              <div class="vocab-discovery">
+                <label class="sr-only" for="vocabSearch">Search useful vocabulary</label>
+                <input id="vocabSearch" class="vocab-search" type="search" placeholder="Search English, Malagasy, or examples…" autocomplete="off" />
+                <div class="vocab-status-filters" id="vocabStatusFilters" aria-label="Vocabulary status"></div>
+              </div>
+              <div class="category-filters" id="categoryFilters"></div>
+              <div class="toolbar-actions">
+                <button class="btn btn-outline btn-sm" id="vocabReviewAll">Review words</button>
+                <button class="btn btn-outline btn-sm" id="vocabSavedBtn">🔖 Saved words</button>
+                <button class="btn btn-outline btn-sm" id="vocabQuizBtn">Quiz this topic</button>
+              </div>
+            </div>
+
+            <div class="vocab-topics" id="vocabTopics" aria-label="Topics"></div>
+            <div class="vocab-grid" id="vocabGrid"></div>
+          </section>
+
+          <!-- ─── ALPHABET & ESSENTIALS ─────────────────────────────── -->
+          <section id="view-alphabet" class="view" aria-labelledby="alphabetTitle">
+            <div class="view-header">
+              <h2 id="alphabetTitle">Alphabet &amp; essentials <span class="mg-label">· Abidia sy Andavanandro</span></h2>
+              <p class="view-desc">The 26 letters with the sounds they make (IPA), the numbers, the days of the week, the months of the year, telling the time and measuring distance.</p>
+            </div>
+            <div class="alphabet-selector" id="alphabetSelector" aria-label="Choose an essentials lesson"></div>
+            <div class="alphabet-body" id="alphabetBody"></div>
+          </section>
+
+          <!-- ─── CLASSROOM ENGLISH ─────────────────────────────────── -->
+          <section id="view-classroom" class="view">
+            <div class="view-header">
+              <h2 id="classroomTitle">Classroom English <span class="mg-label">· Teny baiko</span></h2>
+              <p class="view-desc" id="classroomViewDesc">The words teachers and pupils use every day in class — in English and Malagasy. Listen, repeat, and mark the phrases you know.</p>
+            </div>
+
+            <div class="toolbar">
+              <div class="vocab-discovery">
+                <label class="sr-only" for="classroomSearch">Search classroom phrases</label>
+                <input id="classroomSearch" class="vocab-search" type="search" placeholder="Search English or Malagasy classroom phrases…" autocomplete="off" />
+              </div>
+              <div class="category-filters" id="classroomFilters"></div>
+              <div class="toolbar-actions">
+                <button class="btn btn-outline btn-sm" id="classroomListenAll">🔊 Listen to all</button>
+                <button class="btn btn-outline btn-sm" id="classroomQuizBtn">Quiz these phrases</button>
+              </div>
+            </div>
+
+            <div class="vocab-grid" id="classroomGrid"></div>
+          </section>
+
+          <!-- ─── GRAMMAR ───────────────────────────────────────────── -->
+          <section id="view-grammar" class="view">
+            <div class="view-header">
+              <h2>Grammar &amp; Tenses</h2>
+              <p class="view-desc">Understand how English sentences are built. Lessons include explanations in Malagasy.</p>
+            </div>
+
+            <div class="toolbar">
+              <div class="category-filters" id="grammarFilters"></div>
+            </div>
+
+            <div class="grammar-content" id="grammarContent"></div>
+          </section>
+
+          <!-- ─── IRREGULAR VERBS ───────────────────────────────────── -->
+          <section id="view-irregular-verbs" class="view" aria-labelledby="irregularVerbsTitle">
+            <div class="view-header">
+              <h2 id="irregularVerbsTitle">Irregular verbs</h2>
+              <p class="view-desc">Learn the base, past simple, past participle and -ing forms of common verbs. Start with <strong>to be</strong> and <strong>to have</strong>.</p>
+            </div>
+            <div class="irregular-intro">
+              <div><strong>Remember</strong><span>Irregular verbs do not make the past with only <em>-ed</em>.</span></div>
+              <div><strong>Example</strong><span>go → went → gone · have → had → had</span></div>
+            </div>
+            <label class="sr-only" for="irregularVerbSearch">Search irregular verbs</label>
+            <input id="irregularVerbSearch" class="vocab-search irregular-search" type="search" placeholder="Search a verb or Malagasy meaning…" autocomplete="off" />
+            <div class="irregular-table-wrap" id="irregularVerbTable"></div>
+          </section>
+
+          <!-- ─── READING ───────────────────────────────────────────── -->
+          <section id="view-reading" class="view">
+            <div class="view-header">
+              <h2>Reading</h2>
+              <p class="view-desc">Read short passages about everyday life. Answer questions to check your understanding.</p>
+            </div>
+
+            <div class="reading-selector" id="readingSelector"></div>
+            <div class="reading-content" id="readingContent"></div>
+          </section>
+
+          <!-- ─── WRITING ───────────────────────────────────────────── -->
+          <section id="view-writing" class="view">
+            <div class="view-header">
+              <h2>Writing</h2>
+              <p class="view-desc">Practice writing in English with guided exercises. Learn sentence structure and common phrases.</p>
+            </div>
+
+            <div class="writing-selector" id="writingSelector"></div>
+            <div class="writing-content" id="writingContent"></div>
+          </section>
+
+          <!-- ─── CONVERSATIONS ─────────────────────────────────────── -->
+          <section id="view-conversations" class="view">
+            <div class="view-header">
+              <h2>Conversations &amp; Dialogues</h2>
+              <p class="view-desc">Real-life dialogues with line-by-line English and Malagasy. Practise reading aloud. Click 🔊 to hear each line.</p>
+            </div>
+            <div class="conv-controls">
+              <div class="category-filters" id="convFilters"></div>
+            </div>
+            <div class="conv-list" id="convList"></div>
+            <div class="conv-detail" id="convDetail"></div>
+          </section>
+
+          <!-- ─── DRILLS ────────────────────────────────────────────── -->
+          <section id="view-drills" class="view">
+            <div class="view-header">
+              <h2>Drills</h2>
+              <p class="view-desc">Build accuracy with Fill the Gap, Find the Mistake, and Reorder Words exercises.</p>
+            </div>
+            <div class="drill-controls">
+              <div class="category-filters" id="drillFilters"></div>
+            </div>
+            <div class="drill-area" id="drillArea"></div>
+          </section>
+
+          <!-- ─── LISTENING ─────────────────────────────────────────── -->
+          <section id="view-listening" class="view">
+            <div class="view-header">
+              <h2>Listening &amp; Pronunciation</h2>
+              <p class="view-desc">Train your ear with minimal pairs, phonics drills, and pronunciation tips. Read aloud for practice.</p>
+            </div>
+
+            <div class="listening-selector" id="listeningSelector" aria-label="Choose a listening lesson"></div>
+            <div class="listening-content" id="listeningContent"></div>
+          </section>
+
+          <!-- ─── SPEAKING ──────────────────────────────────────────── -->
+          <section id="view-speaking" class="view" aria-labelledby="speakingTitle">
+            <div class="view-header">
+              <h2 id="speakingTitle">Speaking practice</h2>
+              <p class="view-desc">Listen to a useful sentence, say it into your microphone, and compare what the browser heard.</p>
+            </div>
+            <div class="speaking-picker" id="speakingPicker" aria-label="Choose a speaking practice sentence"></div>
+            <div class="speaking-content" id="speakingContent"></div>
+          </section>
+
+          <!-- ─── DAILY DEVOTIONAL ──────────────────────────────────── -->
+          <section id="view-devotional" class="view" aria-labelledby="devotionalTitle">
+            <div class="view-header">
+              <h2 id="devotionalTitle">Daily devotional <span class="mg-label">· Fandalinana Baiboly</span></h2>
+              <p class="view-desc">A one-year journey through the Bible. Each day brings a new topic, a verse to read, and three new English words to learn.</p>
+            </div>
+            <div class="devotional-body" id="devotionalBody"></div>
+          </section>
+
+          <!-- ─── PROGRESS ──────────────────────────────────────────── -->
+          <section id="view-progress" class="view">
+            <div class="view-header">
+              <h2>Your Progress</h2>
+              <p class="view-desc">Track what you have learned across all sections.</p>
+            </div>
+            <div class="progress-dashboard" id="progressDashboard"></div>
+          </section>
+
+        </main>
+      </div>
+
+      <!-- ═══ BOTTOM TAB BAR (mobile) ══════════════════════════════════ -->
+      <nav class="tabbar" aria-label="Main navigation">
+        <button class="nav-tab tab-item active" data-view="today"><span class="ti">🎯</span><span class="tl">Practice</span></button>
+        <button class="nav-tab tab-item" data-view="vocabulary"><span class="ti">📚</span><span class="tl">Words</span></button>
+        <button class="nav-tab tab-item" data-view="classroom"><span class="ti">🏫</span><span class="tl">Class</span></button>
+        <button class="nav-tab tab-item" data-view="conversations"><span class="ti">💬</span><span class="tl">Talk</span></button>
+         <button class="tab-item" data-action="more" id="moreBtn" type="button" aria-expanded="false"><span class="ti">⋯</span><span class="tl">More</span></button>
+      </nav>
+
+    </div>
+  </div>
+
+  <!-- ═══ SCRIM + SHEETS ═════════════════════════════════════════════ -->
+  <div class="scrim" id="scrim" hidden></div>
+
+  <!-- Settings -->
+  <aside class="sheet" id="settingsSheet" hidden role="dialog" aria-modal="true" aria-labelledby="settingsTitle">
+    <header class="sheet-head">
+      <h2 id="settingsTitle">⚙️ Settings</h2>
+      <button class="icon-btn" data-close-sheet type="button" aria-label="Close settings">✕</button>
+    </header>
+    <div class="sheet-body">
+      <section class="set-group">
+        <h3>Appearance</h3>
+        <div class="segmented" id="themeSeg" role="group" aria-label="Theme">
+          <button type="button" data-theme-choice="light">☀️ Day</button>
+          <button type="button" data-theme-choice="dark">🌙 Night</button>
+          <button type="button" data-theme-choice="system">💻 System</button>
+        </div>
+      </section>
+
+      <section class="set-group">
+        <h3>Text size</h3>
+        <div class="segmented" id="sizeSeg" role="group" aria-label="Text size">
+          <button type="button" data-size-choice="small"><span class="ts-s">A</span> Small</button>
+          <button type="button" data-size-choice="medium">A Medium</button>
+          <button type="button" data-size-choice="large"><span class="ts-l">A</span> Large</button>
+        </div>
+      </section>
+
+      <section class="set-group">
+        <h3>Study level</h3>
+        <select id="learningLevel" class="setting-select level-setting-select" aria-label="Choose your study level">
+          <option value="beginner">Beginner · Vao manomboka</option>
+          <option value="elementary">Elementary · Fototra</option>
+          <option value="pre-intermediate">Pre-Intermediate · Alohan’ny antonony</option>
+          <option value="intermediate">Intermediate · Antonony</option>
+          <option value="advanced">Advanced · Ambony</option>
+        </select>
+        <p class="set-hint">Choose where to start. Intermediate and Advanced study in English without Malagasy hints.</p>
+      </section>
+
+      <section class="set-group">
+        <h3>Voice speed</h3>
+        <div class="range-row">
+          <input type="range" id="rateRange" min="0.5" max="1.3" step="0.05" value="0.85" aria-label="Voice speed" />
+          <span class="range-value" id="rateValue">Normal</span>
+        </div>
+        <p class="set-hint">Slower is easier for young learners.</p>
+      </section>
+
+      <section class="set-group">
+        <h3>English voice</h3>
+        <div class="voice-setting-grid">
+          <label class="setting-select-row">
+            <span>Accent</span>
+            <select id="voiceAccent" class="setting-select" aria-label="English accent">
+              <option value="british">🇬🇧 British English</option>
+              <option value="american">🇺🇸 American English</option>
+            </select>
+          </label>
+          <label class="setting-select-row">
+            <span>Voice type</span>
+            <select id="voiceGender" class="setting-select" aria-label="Voice type">
+              <option value="any">Any available voice</option>
+              <option value="female">Female voice</option>
+              <option value="male">Male voice</option>
+            </select>
+          </label>
+        </div>
+        <button class="btn btn-outline btn-sm voice-test-btn" id="voiceTest" type="button">🔊 Test this voice</button>
+        <p class="set-hint" id="voiceHint">The closest installed English voice will be used.</p>
+      </section>
+
+      <section class="set-group">
+        <h3>Preferences</h3>
+        <label class="switch-row">
+          <span>Show Malagasy hints</span>
+          <input type="checkbox" class="switch" id="setMg" checked />
+        </label>
+        <label class="switch-row">
+          <span>Speak a word when I learn it</span>
+          <input type="checkbox" class="switch" id="setAutoSpeak" />
+        </label>
+        <label class="switch-row">
+          <span>Reduce motion</span>
+          <input type="checkbox" class="switch" id="setMotion" />
+        </label>
+      </section>
+
+      <section class="set-group">
+        <h3>Data</h3>
+        <button class="btn btn-danger btn-sm" id="setReset" type="button">Reset all progress</button>
+        <p class="set-hint">Your progress and Malagasy corrections are saved only on this device.</p>
+      </section>
+
+      <section class="set-group about">
+        <h3>About</h3>
+        <p class="about-name"><strong>Easy English</strong> · Mianatra Anglisy</p>
+        <p class="set-hint">Version 1.0.0 — an English-learning app for Malagasy learners. Works offline.</p>
+      </section>
+    </div>
+  </aside>
+
+  <!-- More menu -->
+  <aside class="sheet sheet-compact" id="moreSheet" hidden role="dialog" aria-modal="true" aria-labelledby="moreTitle">
+    <header class="sheet-head">
+      <h2 id="moreTitle">More</h2>
+      <button class="icon-btn" data-close-sheet type="button" aria-label="Close menu">✕</button>
+    </header>
+    <div class="sheet-body">
+      <nav class="sheet-nav" aria-label="More sections">
+        <button class="nav-tab sheet-nav-item" data-view="alphabet"><span class="ni">🔤</span> Alphabet &amp; essentials</button>
+        <button class="nav-tab sheet-nav-item" data-view="syllabus"><span class="ni">🧭</span> Curriculum</button>
+        <button class="nav-tab sheet-nav-item" data-view="grammar"><span class="ni">📖</span> Grammar</button>
+        <button class="nav-tab sheet-nav-item" data-view="irregular-verbs"><span class="ni">🔁</span> Irregular verbs</button>
+        <button class="nav-tab sheet-nav-item" data-view="reading"><span class="ni">📰</span> Reading</button>
+        <button class="nav-tab sheet-nav-item" data-view="writing"><span class="ni">✏️</span> Writing</button>
+        <button class="nav-tab sheet-nav-item" data-view="drills"><span class="ni">🧩</span> Drills</button>
+        <button class="nav-tab sheet-nav-item" data-view="listening"><span class="ni">🎧</span> Listening</button>
+        <button class="nav-tab sheet-nav-item" data-view="speaking"><span class="ni">🗣️</span> Speaking</button>
+        <button class="nav-tab sheet-nav-item" data-view="devotional"><span class="ni">🕊️</span> Daily devotional</button>
+        <button class="nav-tab sheet-nav-item" data-view="progress"><span class="ni">📊</span> Progress</button>
+      </nav>
+      <button class="sheet-nav-item sheet-action" id="moreSettingsBtn" type="button"><span class="ni">⚙️</span> Settings</button>
+    </div>
+  </aside>
+
+  <!-- ═══ TOAST ════════════════════════════════════════════════════ -->
+  <div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+  <!-- ═══ SCRIPTS ══════════════════════════════════════════════════ -->
+  <script src="tts-bridge.js"></script>
+  <script src="data/vocabulary.js"></script>
+  <script src="data/alphabet.js"></script>
+  <script src="data/classroom.js"></script>
+  <script src="data/classroom-course.js"></script>
+  <script src="data/grammar.js"></script>
+  <script src="data/reading.js"></script>
+  <script src="data/conversations.js"></script>
+  <script src="data/writing.js"></script>
+  <script src="data/drills.js"></script>
+  <script src="data/listening.js"></script>
+  <script src="data/irregular-verbs.js"></script>
+  <script src="data/syllabus.js"></script>
+  <script src="data/curriculum.js"></script>
+  <script src="data/course.js"></script>
+  <script src="data/devotional-verses.js"></script>
+  <script src="data/devotional.js"></script>
+  <script src="app.js"></script>
+  <script>
+    // Installable-app (PWA) support. Skipped on file:// (Electron desktop).
+    if ('serviceWorker' in navigator && location.protocol.indexOf('http') === 0) {
+      window.addEventListener('load', function () {
+        navigator.serviceWorker.register('sw.js').catch(function () {});
+      });
+    }
+  </script>
+</body>
+</html>
