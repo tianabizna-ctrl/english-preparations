@@ -1,0 +1,53 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  lint-and-validate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Syntax-check all JavaScript
+        run: |
+          find app -name '*.js' -exec node --check {} +
+          find br-am-webapp -name '*.js' -exec node --check {} +
+          node --check desktop/main.cjs
+
+      - name: Validate vocabulary IDs are unique
+        run: |
+          node -e "
+            const fs = require('fs');
+            const src = fs.readFileSync('app/data/vocabulary.js', 'utf8');
+            const ids = [...src.matchAll(/id:\s*'([^']+)'/g)].map(m => m[1]);
+            const dupes = ids.filter((id, i) => ids.indexOf(id) !== i);
+            if (dupes.length) { console.error('Duplicate IDs:', dupes); process.exit(1); }
+            console.log('All', ids.length, 'vocabulary IDs are unique.');
+          "
+
+      - name: Check service worker cache list matches actual files
+        run: |
+          node -e "
+            const fs = require('fs');
+            const sw = fs.readFileSync('app/sw.js', 'utf8');
+            const cached = [...sw.matchAll(/'\.\/([^']+)'/g)].map(m => m[1]);
+            const missing = cached.filter(f => !fs.existsSync('app/' + f));
+            if (missing.length) { console.error('SW references missing files:', missing); process.exit(1); }
+            console.log('All', cached.length, 'service-worker entries exist.');
+          "
+
+      - name: Verify no hardcoded user paths
+        run: |
+          if grep -rn '/Users/' --include='*.md' --include='*.js' --include='*.json' --include='*.html' --include='*.sh' . | grep -v node_modules | grep -v '.git/'; then
+            echo "ERROR: Hardcoded user paths found"
+            exit 1
+          fi
+          echo "No hardcoded user paths found."
