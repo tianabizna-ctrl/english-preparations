@@ -69,7 +69,7 @@ public class MainActivity extends Activity {
         WebSettings settings = webView.getSettings();
         settings.setJavaScriptEnabled(true);
         settings.setDomStorageEnabled(true);       // enables localStorage for progress
-        settings.setAllowFileAccess(true);
+        settings.setAllowFileAccess(false);       // assets are loaded via file:///android_asset/ which does not need this
         settings.setLoadWithOverviewMode(true);
         settings.setUseWideViewPort(true);
         settings.setSupportZoom(false);
@@ -98,173 +98,87 @@ public class MainActivity extends Activity {
         tts.speak(second, TextToSpeech.QUEUE_ADD, null, "easyenglish-second");
     }
 
-    private void speakSequenceManyNow(String json, float rate, long gap) {
-        if (!ttsReady || json == null || json.isEmpty()) return;
-        try {
-            JSONArray items = new JSONArray(json);
-            if (items.length() == 0) return;
-            float safeRate = rate <= 0 ? 1f : Math.max(0.3f, Math.min(rate, 2f));
-            long safeGap = Math.max(150L, Math.min(gap, 1500L));
-            tts.setSpeechRate(safeRate);
-            boolean spoken = false;
-            for (int i = 0; i < items.length(); i++) {
-                String text = items.optString(i, "");
-                if (text.isEmpty()) continue;
-                tts.speak(text, spoken ? TextToSpeech.QUEUE_ADD : TextToSpeech.QUEUE_FLUSH, null, "easyenglish-sequence-" + i);
-                spoken = true;
-                if (i < items.length() - 1) {
-                    tts.playSilence(safeGap, TextToSpeech.QUEUE_ADD, null);
-                }
-            }
-        } catch (Exception ignored) {
-            // Ignore malformed bridge data rather than interrupting the app.
+    private void speakSequenceManyNow(String sequence, float rate, long gap) {
+        if (!ttsReady || sequence == null || sequence.isEmpty()) return;
+        float safeRate = rate <= 0 ? 1f : Math.max(0.3f, Math.min(rate, 2f));
+        long safeGap = Math.max(150L, Math.min(gap, 1500L));
+        tts.setSpeechRate(safeRate);
+        JSONArray parts = new JSONArray(sequence);
+        for (int i = 0; i < parts.length(); i++) {
+            try {
+                tts.speak(parts.getString(i), i == 0 ? TextToSpeech.QUEUE_FLUSH : TextToSpeech.QUEUE_ADD, null, "easyenglish");
+                if (i < parts.length() - 1) tts.playSilence(safeGap, TextToSpeech.QUEUE_ADD, null);
+            } catch (Exception e) { /* skip */ }
         }
     }
 
     private void applyVoicePreference() {
-        if (tts == null) return;
-        Locale preferred = "american".equals(voiceAccent) ? Locale.US : Locale.UK;
-        int result = tts.setLanguage(preferred);
-        if (result == TextToSpeech.LANG_MISSING_DATA || result == TextToSpeech.LANG_NOT_SUPPORTED) {
-            tts.setLanguage(Locale.US);
-        }
-
-        Set<Voice> voices = tts.getVoices();
-        if (voices == null || voices.isEmpty()) return;
-        Voice best = null;
-        int bestScore = Integer.MIN_VALUE;
-        for (Voice voice : voices) {
-            Locale locale = voice.getLocale();
-            if (locale == null || !"en".equalsIgnoreCase(locale.getLanguage())) continue;
-            int score = 0;
-            if (preferred.getCountry().equalsIgnoreCase(locale.getCountry())) score += 100;
-            if (voiceNameMatchesGender(voice, voiceGender)) score += 25;
-            if ("any".equals(voiceGender) || voiceNameMatchesGender(voice, voiceGender)) score += 5;
-            if (voice.isNetworkConnectionRequired()) score -= 1;
-            if (score > bestScore) {
-                bestScore = score;
-                best = voice;
+        try {
+            Set<Voice> voices = tts.getVoices();
+            if (voices == null) return;
+            String lang = "british".equals(voiceAccent) ? "en-GB" : "en-US";
+            Voice best = null;
+            for (Voice v : voices) {
+                if (v.getName().toLowerCase().startsWith(lang)) { best = v; break; }
             }
-        }
-        if (best != null) {
-            try {
-                tts.setVoice(best);
-            } catch (IllegalArgumentException ignored) {
-                // Keep the selected locale when a device rejects a voice.
-            }
-        }
-    }
-
-    private boolean voiceNameMatchesGender(Voice voice, String gender) {
-        if (gender == null || "any".equals(gender)) return true;
-        String name = voice.getName() == null ? "" : voice.getName().toLowerCase(Locale.US);
-        if ("female".equals(gender)) {
-            return name.contains("female") || name.contains("woman") || name.contains("samantha")
-                    || name.contains("karen") || name.contains("victoria") || name.contains("zira")
-                    || name.contains("susan") || name.contains("hazel") || name.contains("ava");
-        }
-        return name.contains("male") || name.contains("man") || name.contains("daniel")
-                || name.contains("alex") || name.contains("arthur") || name.contains("george")
-                || name.contains("david") || name.contains("james") || name.contains("oliver");
-    }
-
-    /** Exposed to JavaScript as window.AndroidTTS. */
-    public class TtsBridge {
-        @JavascriptInterface
-        public void speak(final String text, final float rate) {
-            if (!ttsReady) {
-                pendingText = text;
-                pendingFirst = null;
-                pendingSecond = null;
-                pendingManySequence = null;
-                pendingRate = rate;
-                return;
-            }
-            runOnUiThread(new Runnable() {
-                @Override
-                public void run() {
-                    speakNow(text, rate);
-                }
-            });
-        }
-
-        @JavascriptInterface
-        public void speakSequence(final String first, final String second, final float rate, final long gap) {
-            if (!ttsReady) {
-                pendingText = null;
-                pendingFirst = first;
-                pendingSecond = second;
-                pendingManySequence = null;
-                pendingSequenceRate = rate;
-                pendingSequenceGap = gap;
-                return;
-            }
-            runOnUiThread(new Runnable() {
-                @Override
-                public void run() {
-                    speakSequenceNow(first, second, rate, gap);
-                }
-            });
-        }
-
-        @JavascriptInterface
-        public void speakSequenceMany(final String json, final float rate, final long gap) {
-            if (!ttsReady) {
-                pendingText = null;
-                pendingFirst = null;
-                pendingSecond = null;
-                pendingManySequence = json;
-                pendingSequenceRate = rate;
-                pendingSequenceGap = gap;
-                return;
-            }
-            runOnUiThread(new Runnable() {
-                @Override
-                public void run() {
-                    speakSequenceManyNow(json, rate, gap);
-                }
-            });
-        }
-
-        @JavascriptInterface
-        public void setVoicePreference(final String accent, final String gender) {
-            voiceAccent = "american".equalsIgnoreCase(accent) ? "american" : "british";
-            voiceGender = "female".equalsIgnoreCase(gender) || "male".equalsIgnoreCase(gender)
-                    ? gender.toLowerCase(Locale.US) : "any";
-            if (ttsReady) {
-                runOnUiThread(new Runnable() {
-                    @Override
-                    public void run() {
-                        applyVoicePreference();
-                    }
-                });
-            }
-        }
-
-        @JavascriptInterface
-        public void stop() {
-            if (tts != null) tts.stop();
-        }
+            if (best != null) tts.setVoice(best);
+            else tts.setLanguage(Locale.UK);
+        } catch (Exception e) { /* fall back to default */ }
     }
 
     @Override
     public void onBackPressed() {
-        if (webView != null && webView.canGoBack()) {
-            webView.goBack();
-        } else {
-            super.onBackPressed();
+        webView.evaluateJavascript("window.dispatchEvent(new Event('back'))", null);
+    }
+
+    private class TtsBridge {
+        @JavascriptInterface
+        public void speak(String text, float rate) {
+            if (!ttsReady) { pendingText = text; pendingRate = rate; return; }
+            speakNow(text, rate);
+        }
+
+        @JavascriptInterface
+        public void speakSequence(String first, String second, float rate, long gap) {
+            if (!ttsReady) { pendingFirst = first; pendingSecond = second; pendingSequenceRate = rate; pendingSequenceGap = gap; return; }
+            speakSequenceNow(first, second, rate, gap);
+        }
+
+        @JavascriptInterface
+        public void speakSequenceMany(String sequence, float rate, long gap) {
+            if (!ttsReady) { pendingManySequence = sequence; pendingSequenceRate = rate; pendingSequenceGap = gap; return; }
+            speakSequenceManyNow(sequence, rate, gap);
+        }
+
+        @JavascriptInterface
+        public void cancel() {
+            if (ttsReady) tts.stop();
+        }
+
+        @JavascriptInterface
+        public void setVoicePreference(String accent, String gender) {
+            voiceAccent = accent;
+            voiceGender = gender;
+            if (ttsReady) applyVoicePreference();
+        }
+
+        @JavascriptInterface
+        public void isSpeaking() {}
+
+        @JavascriptInterface
+        public void speakSlow(String text) {
+            speakNow(text, 0.5f);
+        }
+
+        @JavascriptInterface
+        public void playWord(String text) {
+            speakNow(text, 0.7f);
         }
     }
 
     @Override
     protected void onDestroy() {
-        if (tts != null) {
-            tts.stop();
-            tts.shutdown();
-        }
-        if (webView != null) {
-            webView.destroy();
-        }
+        if (tts != null) { tts.stop(); tts.shutdown(); }
         super.onDestroy();
     }
 }
