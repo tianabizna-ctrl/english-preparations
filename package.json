@@ -1,0 +1,15 @@
+{
+  "name": "easy-english",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Easy English — a complete English learning app for Malagasy learners",
+  "license": "MIT",
+  "scripts": {
+    "start": "cd app && python3 -m http.server 8788",
+    "dev:desktop": "cd desktop && npm start",
+    "lint:syntax": "find app br-am-webapp -name '*.js' -exec node --check {} + && node --check desktop/main.cjs",
+    "test:vocab-ids": "node test/validate-vocab-ids.js",
+    "test:sw-files": "node test/validate-sw-cache.js",
+    "test": "npm run lint:syntax && npm run test:vocab-ids && npm run test:sw-files"
+  }
+}
