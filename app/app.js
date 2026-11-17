@@ -844,15 +844,70 @@
     });
 
     var pct = words.length ? Math.round((learned / words.length) * 100) : 0;
+    var currentIndex = availableDailyLessons.indexOf(selected);
+    if (currentIndex < 0) currentIndex = 0;
+    var totalLessons = availableDailyLessons.length;
+    var prevLesson = currentIndex > 0 ? availableDailyLessons[currentIndex - 1] : null;
+    var nextLesson = currentIndex < totalLessons - 1 ? availableDailyLessons[currentIndex + 1] : null;
+    var currentRank = selectedLevel().rank;
+    var nextLevelInfo = STUDY_LEVELS.find(function (l) { return l.rank === currentRank + 1; }) || null;
+
+    var timelinePills = availableDailyLessons.map(function (lesson, idx) {
+      var isDone = !!state.progress.lessons[lesson.id || lesson.category];
+      var isCurrent = idx === currentIndex;
+      var cls = 'unit-pill ' + (isCurrent ? 'current' : (isDone ? 'completed' : 'unstarted'));
+      var aria = 'Unit ' + (idx + 1) + ': ' + escapeHtml(lesson.label) + (isDone ? ' (Completed)' : (isCurrent ? ' (Current)' : ''));
+      return '<button type="button" class="' + cls + '" data-jump-unit="' + idx + '" aria-label="' + aria + '" title="Unit ' + (idx + 1) + ': ' + escapeHtml(lesson.label) + '">' +
+        '<span class="up-num">' + (isDone ? '✓' : (idx + 1)) + '</span>' +
+        '<span class="up-name">Unit ' + (idx + 1) + '</span>' +
+      '</button>';
+    }).join('');
+
+    var completedInLevel = availableDailyLessons.filter(function (l) { return !!state.progress.lessons[l.id || l.category]; }).length;
+
+    var stepperBarHtml = '<div class="lesson-stepper" aria-label="Lesson sequence navigation">' +
+      '<div class="ls-header">' +
+        '<div class="ls-breadcrumbs">' +
+          '<button type="button" class="crumb-link" id="crumbCurriculumBtn">🧭 Curriculum</button>' +
+          '<span class="crumb-sep">›</span>' +
+          '<span class="crumb-level">' + escapeHtml(selectedLevel().label) + '</span>' +
+          '<span class="crumb-sep">›</span>' +
+          '<strong class="crumb-current">Unit ' + (currentIndex + 1) + ' of ' + totalLessons + '</strong>' +
+        '</div>' +
+        '<span class="ls-status-tag ' + (isComplete ? 'completed' : (learned > 0 ? 'in-progress' : 'unstarted')) + '">' +
+          (isComplete ? '✅ Unit completed' : (learned > 0 ? '🟡 In progress (' + learned + '/' + words.length + ' words)' : '⚪ Not started yet')) +
+        '</span>' +
+      '</div>' +
+      '<div class="ls-controls">' +
+        (prevLesson
+          ? '<button type="button" class="btn btn-outline btn-sm ls-step-btn prev" id="lsTopPrev" title="Go to Unit ' + currentIndex + ': ' + escapeHtml(prevLesson.label) + '">‹ Prev: Unit ' + currentIndex + '</button>'
+          : '<button type="button" class="btn btn-ghost btn-sm ls-step-btn" disabled aria-disabled="true">‹ First unit</button>') +
+        '<div class="ls-current-info">' +
+          '<span class="ls-unit-badge">Unit ' + (currentIndex + 1) + ' of ' + totalLessons + '</span>' +
+          '<strong class="ls-unit-title">' + escapeHtml(selected.label) + '</strong>' +
+        '</div>' +
+        (nextLesson
+          ? '<button type="button" class="btn btn-outline btn-sm ls-step-btn next" id="lsTopNext" title="Go to Unit ' + (currentIndex + 2) + ': ' + escapeHtml(nextLesson.label) + '">Next: Unit ' + (currentIndex + 2) + ' ›</button>'
+          : (nextLevelInfo
+            ? '<button type="button" class="btn btn-primary btn-sm ls-step-btn next" id="lsTopNextLevel">Graduate to ' + escapeHtml(nextLevelInfo.label) + ' 🎓 ›</button>'
+            : '<button type="button" class="btn btn-ghost btn-sm ls-step-btn" disabled aria-disabled="true">Course completed! 🌟</button>')) +
+      '</div>' +
+      '<div class="unit-timeline-container">' +
+        '<div class="ut-header"><span class="ut-label">Units in ' + escapeHtml(selectedLevel().label) + ':</span>' +
+          '<span class="ut-summary">' + completedInLevel + ' of ' + totalLessons + ' units completed</span>' +
+        '</div>' +
+        '<nav class="unit-timeline">' + timelinePills + '</nav>' +
+      '</div>' +
+    '</div>';
 
     content.innerHTML =
-          (focusedLesson ? '<div class="focused-lesson-nav"><button class="btn btn-ghost btn-sm" id="backToCourseMap">← Curriculum</button><span class="focused-lesson-level">' + escapeHtml(selectedLevel().label) + ' · Unit ' + (availableDailyLessons.indexOf(selected) + 1) + ' of ' + availableDailyLessons.length + '</span></div>' : '') +
+      stepperBarHtml +
       '<div class="today-hero' + (focusedLesson ? ' focused-lesson-hero' : '') + '">' +
         '<div class="th-top">' +
           (focusedLesson ? '<div class="focused-lesson-kicker"><span class="eyebrow">' + (isComplete ? 'Lesson completed ✅' : 'Course lesson') + '</span><h2>' + escapeHtml(selected.label) + '</h2></div>' : '<div class="th-date"><span class="dh-emoji">📅</span><strong>' + formatDate(new Date()) + '</strong></div>') +
           '<div class="th-side">' + ringPct(pct, 'Learned', learned + '/' + words.length + ' words') + '</div>' +
         '</div>' +
-        (focusedLesson ? '<div class="focused-lesson-summary"><p>' + escapeHtml(selected.goal) + '</p>' + (selected.grammar ? '<p class="lesson-focus"><strong>Grammar focus:</strong> ' + escapeHtml(selected.grammar) + '</p>' : '') + '</div>' : '<div><span class="eyebrow">' + (isComplete ? 'Lesson completed ✅' : 'Next lesson') + '</span><h3>' + selected.label + ' <span class="mg-label">' + selected.mg + '</span></h3><p>' + selected.goal + '</p>' + (selected.grammar ? '<p class="lesson-focus"><strong>Grammar focus:</strong> ' + selected.grammar + '</p>' : '') + '</div>') +
+        (focusedLesson ? '<div class="focused-lesson-summary"><p>' + escapeHtml(selected.goal) + '</p>' + (selected.grammar ? '<p class="lesson-focus"><strong>Grammar focus:</strong> ' + escapeHtml(selected.grammar) + '</p>' : '') + '</div>' : '<div><span class="eyebrow">' + (isComplete ? 'Lesson completed ✅' : 'Next lesson') + '</span><h3>' + escapeHtml(selected.label) + ' <span class="mg-label">' + escapeHtml(selected.mg || '') + '</span></h3><p>' + escapeHtml(selected.goal) + '</p>' + (selected.grammar ? '<p class="lesson-focus"><strong>Grammar focus:</strong> ' + escapeHtml(selected.grammar) + '</p>' : '') + '</div>') +
         '<div class="th-actions">' +
           '<button class="btn btn-primary btn-lg" id="todayContinueBtn">' + (focusedLesson ? 'Start lesson quiz 🎯' : 'Continue lesson 🎯') + '</button>' +
           '<button class="btn btn-ghost btn-sm" id="todayRepeatBtn">Repeat the words</button>' +
@@ -873,10 +928,24 @@
       }).join('') + '</div>' +
        renderCoursePlan(selected) +
        '<div class="today-actions' + (focusedLesson ? ' focused-lesson-actions' : '') + '">' +
-         '<p>' + (focusedLesson ? 'Study the lesson, then check what you can do.' : 'Say each word aloud, then test yourself.') + '</p>' +
-         '<div class="today-action-buttons">' +
-           '<button class="btn btn-primary" id="todayQuizBtn">Start lesson quiz 🎯</button>' +
-           (focusedLesson ? '' : '<button class="btn btn-outline" id="todayVocabBtn">Useful vocabulary</button><button class="btn btn-outline" id="todayDrillBtn">Try a drill</button>') +
+         '<div class="lesson-footer-stepper">' +
+           '<div class="lfs-actions">' +
+             (prevLesson
+               ? '<button type="button" class="btn btn-outline btn-lg" id="lsBottomPrev">‹ Previous: Unit ' + currentIndex + '</button>'
+               : '<button type="button" class="btn btn-ghost btn-lg" disabled aria-disabled="true">‹ First unit</button>') +
+             '<button class="btn btn-primary btn-lg" id="todayQuizBtn">Start lesson quiz 🎯</button>' +
+             (nextLesson
+               ? '<button type="button" class="btn btn-secondary btn-lg" id="lsBottomNext">Next: Unit ' + (currentIndex + 2) + ' ›</button>'
+               : (nextLevelInfo
+                 ? '<button type="button" class="btn btn-primary btn-lg" id="lsBottomNextLevel">Graduate to ' + escapeHtml(nextLevelInfo.label) + ' 🎓 ›</button>'
+                 : '<button type="button" class="btn btn-ghost btn-lg" disabled aria-disabled="true">Level complete! 🌟</button>')) +
+           '</div>' +
+           '<div class="lfs-secondary">' +
+             '<button class="btn btn-ghost btn-sm" id="footerRepeatBtn">🔊 Repeat words</button>' +
+             (focusedLesson
+               ? '<button class="btn btn-ghost btn-sm" id="footerBackToMap">🧭 Back to curriculum overview</button>'
+               : '<button class="btn btn-ghost btn-sm" id="todayVocabBtn">📚 Useful vocabulary</button><button class="btn btn-ghost btn-sm" id="todayDrillBtn">🧩 Try a drill</button>') +
+           '</div>' +
          '</div>' +
        '</div>' +
        '';
@@ -894,6 +963,59 @@
         }
       });
     });
+
+    function goToUnit(targetIdx) {
+      if (targetIdx >= 0 && targetIdx < availableDailyLessons.length) {
+        var targetLesson = availableDailyLessons[targetIdx];
+        state.lessonCategory = targetLesson.id || targetLesson.category;
+        renderToday();
+        var scroller = $('contentScroll');
+        if (scroller) scroller.scrollTop = 0;
+      }
+    }
+
+    content.querySelectorAll('[data-jump-unit]').forEach(function (button) {
+      button.addEventListener('click', function () {
+        goToUnit(parseInt(button.dataset.jumpUnit, 10));
+      });
+    });
+
+    var topPrev = $('lsTopPrev');
+    if (topPrev) topPrev.addEventListener('click', function () { goToUnit(currentIndex - 1); });
+    var bottomPrev = $('lsBottomPrev');
+    if (bottomPrev) bottomPrev.addEventListener('click', function () { goToUnit(currentIndex - 1); });
+
+    var topNext = $('lsTopNext');
+    if (topNext) topNext.addEventListener('click', function () { goToUnit(currentIndex + 1); });
+    var bottomNext = $('lsBottomNext');
+    if (bottomNext) bottomNext.addEventListener('click', function () { goToUnit(currentIndex + 1); });
+
+    function graduateNextLevel() {
+      if (nextLevelInfo) {
+        setLearningLevel(nextLevelInfo.id);
+        state.lessonCategory = null;
+        renderToday();
+        showToast('Welcome to ' + nextLevelInfo.label + '! 🎓', 'success');
+        var scroller = $('contentScroll');
+        if (scroller) scroller.scrollTop = 0;
+      }
+    }
+    var topNextLvl = $('lsTopNextLevel');
+    if (topNextLvl) topNextLvl.addEventListener('click', graduateNextLevel);
+    var bottomNextLvl = $('lsBottomNextLevel');
+    if (bottomNextLvl) bottomNextLvl.addEventListener('click', graduateNextLevel);
+
+    var crumbCurriculum = $('crumbCurriculumBtn');
+    if (crumbCurriculum) crumbCurriculum.addEventListener('click', function () {
+      state.lessonFocus = false;
+      switchTab('syllabus');
+    });
+    var footerBack = $('footerBackToMap');
+    if (footerBack) footerBack.addEventListener('click', function () {
+      state.lessonFocus = false;
+      switchTab('syllabus');
+    });
+
     function startTodayQuiz() {
       if (words.length < 4) return showToast('This lesson needs at least four words for a quiz.', 'error');
       startQuiz(words, selected.label, function (score, total) {
@@ -915,11 +1037,16 @@
       });
     }
     $('todayContinueBtn').addEventListener('click', startTodayQuiz);
-    $('todayQuizBtn').addEventListener('click', startTodayQuiz);
-    $('todayRepeatBtn').addEventListener('click', function () {
+    var quizBtn = $('todayQuizBtn');
+    if (quizBtn) quizBtn.addEventListener('click', startTodayQuiz);
+    function repeatWords() {
       var text = words.map(function (w) { return w.word; }).join('. ');
       tts.speakSlow(text);
-    });
+    }
+    $('todayRepeatBtn').addEventListener('click', repeatWords);
+    var footerRepeat = $('footerRepeatBtn');
+    if (footerRepeat) footerRepeat.addEventListener('click', repeatWords);
+
     if ($('todayVocabTopBtn')) $('todayVocabTopBtn').addEventListener('click', function () { switchTab('vocabulary'); });
     if ($('todayDrillTopBtn')) $('todayDrillTopBtn').addEventListener('click', function () { switchTab('drills'); });
     if ($('todayVocabBtn')) $('todayVocabBtn').addEventListener('click', function () { switchTab('vocabulary'); });
@@ -1795,32 +1922,92 @@
     var courseProgress = getCourseProgress(units);
     var currentUnit = courseProgress.current;
     var currentIndex = courseProgress.currentIndex;
-    content.innerHTML = '<div class="syllabus-hero">' +
-      '<div><span class="eyebrow">Your route · ' + (courseInfo ? escapeHtml(courseInfo.stage) : 'Course level') + '</span><h3>' + selected.label + '</h3><p>' + (courseInfo ? escapeHtml(courseInfo.description) : selected.goal) + '</p>' +
-        (courseInfo ? '<p class="syllabus-source-focus"><strong>Curriculum focus:</strong> ' + escapeHtml(courseInfo.sourceFocus) + '</p>' : '') + '</div>' +
-      '<span class="syllabus-level-badge">Level ' + selectedLevel().rank + ' / ' + STUDY_LEVELS.length + '</span>' +
+    var prevUnit = currentIndex > 0 ? units[currentIndex - 1] : null;
+    var nextUnit = currentIndex < units.length - 1 ? units[currentIndex + 1] : null;
+
+    var levelTabsHtml = '<nav class="syllabus-level-tabs" role="tablist" aria-label="Course levels">' +
+      STUDY_LEVELS.map(function (level) {
+        var isActive = level.id === selectedLevel().id;
+        var lvlLessons = typeof COURSE_LESSONS !== 'undefined' ? COURSE_LESSONS.filter(function (l) { return l.level === level.id; }) : [];
+        var doneCount = lvlLessons.filter(function (l) { return !!state.progress.lessons[l.id]; }).length;
+        return '<button type="button" class="slt-btn ' + (isActive ? 'active' : '') + '" data-set-syllabus-level="' + level.id + '" role="tab" aria-selected="' + (isActive ? 'true' : 'false') + '">' +
+          '<span class="slt-rank">Level ' + level.rank + '</span>' +
+          '<strong class="slt-label">' + escapeHtml(level.label) + '</strong>' +
+          '<span class="slt-progress">' + doneCount + '/' + (lvlLessons.length || 10) + ' units</span>' +
+        '</button>';
+      }).join('') +
+    '</nav>';
+
+    content.innerHTML =
+      levelTabsHtml +
+      '<div class="syllabus-hero">' +
+        '<div><span class="eyebrow">Your route · ' + (courseInfo ? escapeHtml(courseInfo.stage) : 'Course level') + '</span><h3>' + selected.label + '</h3><p>' + (courseInfo ? escapeHtml(courseInfo.description) : selected.goal) + '</p>' +
+          (courseInfo ? '<p class="syllabus-source-focus"><strong>Curriculum focus:</strong> ' + escapeHtml(courseInfo.sourceFocus) + '</p>' : '') + '</div>' +
+        '<span class="syllabus-level-badge">Level ' + selectedLevel().rank + ' / ' + STUDY_LEVELS.length + '</span>' +
       '</div>' +
       (courseInfo ? '<div class="syllabus-strands"><strong>Skills in this level</strong><div>' + courseInfo.strands.map(function (strand) { return '<span>' + escapeHtml(strand) + '</span>'; }).join('') + '</div></div>' : '') +
       (typeof COURSE_SOURCES !== 'undefined' ? '<details class="course-sources"><summary>Curriculum documents and course references</summary><ul>' + COURSE_SOURCES.map(function (source) { return '<li><strong>' + escapeHtml(source.short) + '</strong><span>' + escapeHtml(source.title) + '</span></li>'; }).join('') + (typeof COURSE_REFERENCES !== 'undefined' ? COURSE_REFERENCES.map(function (source) { return '<li><strong>' + escapeHtml(source.short) + '</strong><span>' + escapeHtml(source.title) + ' · <a href="' + escapeHtml(source.url) + '" target="_blank" rel="noopener">official source</a></span></li>'; }).join('') : '') + '</ul></details>' : '') +
-      '<section class="curriculum-progress-card"><div class="curriculum-progress-copy"><span class="eyebrow">Current stage</span><h3>' + (currentUnit ? 'Unit ' + (currentIndex + 1) + ': ' + escapeHtml(currentUnit.label || currentUnit.title) : 'Level complete') + '</h3><p>' + (currentUnit ? escapeHtml(currentUnit.goal || currentUnit.focus || '') : 'You have completed every unit in this level. Review any unit or choose the next level.') + '</p><div class="curriculum-progress-track"><span style="width:' + courseProgress.percent + '%"></span></div><small>' + courseProgress.completed + ' of ' + courseProgress.total + ' units complete · ' + courseProgress.wordsLearned + '/' + courseProgress.wordTotal + ' current-unit words learned</small></div>' + (currentUnit ? '<button class="btn btn-primary" id="curriculumContinueBtn" type="button">Continue current unit →</button>' : '') + '</section>' +
+      '<section class="curriculum-progress-card">' +
+        '<div class="curriculum-progress-copy">' +
+          '<div class="cpc-header">' +
+            '<span class="eyebrow">📍 Your active stage</span>' +
+            '<span class="cpc-stage-badge">' + (currentUnit ? 'Unit ' + (currentIndex + 1) + ' of ' + units.length : 'All units complete!') + '</span>' +
+          '</div>' +
+          '<h3>' + (currentUnit ? 'Unit ' + (currentIndex + 1) + ': ' + escapeHtml(currentUnit.label || currentUnit.title) : 'Level complete 🌟') + '</h3>' +
+          '<p>' + (currentUnit ? escapeHtml(currentUnit.goal || currentUnit.focus || '') : 'You have completed every unit in this level. Review any unit below or choose the next level.') + '</p>' +
+          '<div class="curriculum-progress-track"><span style="width:' + courseProgress.percent + '%"></span></div>' +
+          '<small>' + courseProgress.completed + ' of ' + courseProgress.total + ' units completed (' + courseProgress.percent + '%) · ' + courseProgress.wordsLearned + '/' + courseProgress.wordTotal + ' active-unit words learned</small>' +
+        '</div>' +
+        '<div class="curriculum-stage-actions">' +
+          (currentUnit ? '<button class="btn btn-primary btn-lg" id="curriculumContinueBtn" type="button">Continue Unit ' + (currentIndex + 1) + ' →</button>' : '') +
+          '<div class="cpc-step-group">' +
+            (prevUnit ? '<button class="btn btn-outline btn-sm" data-goto-unit="' + prevUnit.id + '" type="button">‹ Review Unit ' + currentIndex + '</button>' : '') +
+            (nextUnit ? '<button class="btn btn-outline btn-sm" data-goto-unit="' + nextUnit.id + '" type="button">Preview Unit ' + (currentIndex + 2) + ' ›</button>' : '') +
+          '</div>' +
+        '</div>' +
+      '</section>' +
       '<div class="syllabus-units">' + units.map(function (unit, index) {
         var complete = !!state.progress.lessons[unit.id];
         var isCurrent = !complete && index === currentIndex;
         var unitWords = unit.words || [];
         var learnedWords = unitWords.filter(function (word) { return !!state.progress.learned[word.id]; }).length;
-        var unitStatus = complete ? 'Completed' : isCurrent ? 'Current stage' : 'Not started';
-        var unitAction = complete ? 'Review unit' : isCurrent ? 'Continue unit' : 'Open unit';
-        return '<article class="syllabus-unit">' +
+        var unitStatus = complete ? 'Completed ✅' : isCurrent ? '📍 You are here' : 'Upcoming';
+        var unitAction = complete ? 'Review unit 🔄' : isCurrent ? 'Continue unit →' : 'Open unit →';
+        var cardClass = 'syllabus-unit' + (isCurrent ? ' is-current-stage' : (complete ? ' is-completed' : ''));
+        return '<article class="' + cardClass + '">' +
           '<div class="syllabus-unit-number">' + String(index + 1).padStart(2, '0') + '</div>' +
-          '<div class="syllabus-unit-copy"><div class="syllabus-unit-status">' + (complete ? '✓ ' : isCurrent ? '● ' : '') + unitStatus + '</div><span class="eyebrow">Unit ' + (index + 1) + '</span><h4>' + (unit.label || unit.title) + '</h4><p>' + (unit.goal || unit.focus) + '</p>' + (unit.grammar ? '<small>Grammar focus: ' + escapeHtml(unit.grammar) + ' · ' + unit.words.length + ' key words · Read · Write · Speak · Listen</small>' : '') + (unitWords.length ? '<div class="unit-word-progress"><span style="width:' + Math.round((learnedWords / unitWords.length) * 100) + '%"></span></div><small class="unit-word-count">' + learnedWords + '/' + unitWords.length + ' key words learned</small>' : '') + '</div>' +
-          '<button class="btn btn-outline btn-sm" data-syllabus-lesson="' + (unit.id || '') + '" data-syllabus-view="' + (unit.view || 'today') + '" type="button">' + unitAction + ' →</button>' +
+          '<div class="syllabus-unit-copy">' +
+            '<div class="syllabus-unit-status ' + (isCurrent ? 'tag-current' : (complete ? 'tag-done' : '')) + '">' + unitStatus + '</div>' +
+            '<span class="eyebrow">Unit ' + (index + 1) + '</span>' +
+            '<h4>' + escapeHtml(unit.label || unit.title) + '</h4>' +
+            '<p>' + escapeHtml(unit.goal || unit.focus || '') + '</p>' +
+            (unit.grammar ? '<small>Grammar focus: ' + escapeHtml(unit.grammar) + ' · ' + unitWords.length + ' key words · Read · Write · Speak · Listen</small>' : '') +
+            (unitWords.length ? '<div class="unit-word-progress"><span style="width:' + Math.round((learnedWords / unitWords.length) * 100) + '%"></span></div><small class="unit-word-count">' + learnedWords + '/' + unitWords.length + ' key words learned</small>' : '') +
+          '</div>' +
+          '<button class="btn ' + (isCurrent ? 'btn-primary' : 'btn-outline') + ' btn-sm" data-syllabus-lesson="' + (unit.id || '') + '" data-syllabus-view="' + (unit.view || 'today') + '" type="button">' + unitAction + '</button>' +
         '</article>';
       }).join('') + '</div>';
+
     var continueButton = $('curriculumContinueBtn');
     if (continueButton && currentUnit) continueButton.addEventListener('click', function () {
       state.lessonCategory = currentUnit.id;
       state.lessonFocus = true;
       switchTab('today', { lessonFocus: true });
+    });
+
+    content.querySelectorAll('[data-goto-unit]').forEach(function (button) {
+      button.addEventListener('click', function () {
+        state.lessonCategory = button.dataset.gotoUnit;
+        state.lessonFocus = true;
+        switchTab('today', { lessonFocus: true });
+      });
+    });
+
+    content.querySelectorAll('[data-set-syllabus-level]').forEach(function (button) {
+      button.addEventListener('click', function () {
+        setLearningLevel(button.dataset.setSyllabusLevel);
+        renderSyllabus();
+      });
     });
     content.querySelectorAll('[data-syllabus-view]').forEach(function (button) {
       button.addEventListener('click', function () {
@@ -1907,12 +2094,25 @@
       content.innerHTML = '<div class="empty-state"><strong>No grammar lessons found.</strong></div>';
       return;
     }
+    var currentGrammarIdx = availableLessons.indexOf(selected);
+    var prevGrammar = currentGrammarIdx > 0 ? availableLessons[currentGrammarIdx - 1] : null;
+    var nextGrammar = currentGrammarIdx < availableLessons.length - 1 ? availableLessons[currentGrammarIdx + 1] : null;
+
     var explanation = levelIsEnglishOnly() ? grammarEnglishOnly(selected.explanation) : selected.explanation;
     var notes = levelIsEnglishOnly() ? grammarEnglishOnly(selected.notes) : selected.notes;
     content.innerHTML = '<div class="grammar-lesson selected-lesson">' +
+      '<div class="item-stepper-bar">' +
+        (prevGrammar
+          ? '<button type="button" class="btn btn-outline btn-sm item-nav-prev" data-nav-grammar="' + prevGrammar.id + '">‹ Prev: ' + escapeHtml(prevGrammar.title) + '</button>'
+          : '<button type="button" class="btn btn-ghost btn-sm" disabled>‹ First lesson</button>') +
+        '<span class="item-stepper-count">Lesson ' + (currentGrammarIdx + 1) + ' of ' + availableLessons.length + '</span>' +
+        (nextGrammar
+          ? '<button type="button" class="btn btn-outline btn-sm item-nav-next" data-nav-grammar="' + nextGrammar.id + '">Next: ' + escapeHtml(nextGrammar.title) + ' ›</button>'
+          : '<button type="button" class="btn btn-ghost btn-sm" disabled>Last lesson ›</button>') +
+      '</div>' +
       '<div class="lesson-header lesson-header-static">' +
-        '<h3><span class="lesson-tag ' + (tagClass[selected.tag] || tagClass[selected.type] || '') + '">' + (selected.tag || selected.type) + '</span> ' + selected.title + '</h3>' +
-        '<span class="lesson-selected-mark">Selected lesson</span>' +
+        '<h3><span class="lesson-tag ' + (tagClass[selected.tag] || tagClass[selected.type] || '') + '">' + (selected.tag || selected.type) + '</span> ' + escapeHtml(selected.title) + '</h3>' +
+        '<span class="lesson-selected-mark">Lesson ' + (currentGrammarIdx + 1) + ' of ' + availableLessons.length + '</span>' +
       '</div>' +
       '<div class="lesson-body open">' +
          '<p class="explanation">' + explanation + '</p>' +
@@ -1924,7 +2124,22 @@
         }).join('') + '</ul>' +
          (notes ? '<div class="note-box">📌 ' + notes + '</div>' : '') +
       '</div>' +
+      '<div class="item-stepper-footer">' +
+        (prevGrammar
+          ? '<button type="button" class="btn btn-outline btn-sm item-nav-prev" data-nav-grammar="' + prevGrammar.id + '">‹ Previous: ' + escapeHtml(prevGrammar.title) + '</button>'
+          : '') +
+        (nextGrammar
+          ? '<button type="button" class="btn btn-primary btn-sm item-nav-next" data-nav-grammar="' + nextGrammar.id + '">Next lesson: ' + escapeHtml(nextGrammar.title) + ' ›</button>'
+          : '') +
+      '</div>' +
     '</div>';
+
+    content.querySelectorAll('[data-nav-grammar]').forEach(function (button) {
+      button.addEventListener('click', function () {
+        state.grammarId = button.dataset.navGrammar;
+        renderGrammar();
+      });
+    });
   }
 
   // ─── READING ─────────────────────────────────────────────────────────
@@ -1945,38 +2160,69 @@
   }
 
   function showReadingPassage(id) {
-    var p = READING_PASSAGES.find(function (r) { return r.id === id; });
+    var availablePassages = levelFiltered(READING_PASSAGES, function (passage) { return passage.level; });
+    var p = availablePassages.find(function (r) { return r.id === id; }) || READING_PASSAGES.find(function (r) { return r.id === id; });
     if (!p) return;
     var content = $('readingContent');
 
+    var currentIdx = availablePassages.indexOf(p);
+    var prevPassage = currentIdx > 0 ? availablePassages[currentIdx - 1] : null;
+    var nextPassage = currentIdx < availablePassages.length - 1 ? availablePassages[currentIdx + 1] : null;
+
     content.innerHTML =
       '<div class="reading-passage">' +
+        '<div class="item-stepper-bar">' +
+          (prevPassage
+            ? '<button type="button" class="btn btn-outline btn-sm item-nav-prev" data-nav-reading="' + prevPassage.id + '">‹ Prev: ' + escapeHtml(prevPassage.title) + '</button>'
+            : '<button type="button" class="btn btn-ghost btn-sm" disabled>‹ First text</button>') +
+          '<span class="item-stepper-count">Reading ' + (currentIdx + 1) + ' of ' + availablePassages.length + ' (' + escapeHtml(p.level) + ')</span>' +
+          (nextPassage
+            ? '<button type="button" class="btn btn-outline btn-sm item-nav-next" data-nav-reading="' + nextPassage.id + '">Next: ' + escapeHtml(nextPassage.title) + ' ›</button>'
+            : '<button type="button" class="btn btn-ghost btn-sm" disabled>Last text ›</button>') +
+        '</div>' +
         '<div style="display:flex;justify-content:space-between;align-items:center;">' +
-          '<h3>' + p.title + '</h3>' +
+          '<h3>' + escapeHtml(p.title) + '</h3>' +
           '<button class="btn btn-ghost btn-sm" id="readSpeakBtn">🔊 Read aloud</button>' +
         '</div>' +
         '<div class="passage-text">' + p.text + '</div>' +
         (p.vocabulary && p.vocabulary.length > 0
           ? '<div style="margin-bottom:1rem;"><h4 style="font-size:0.85rem;color:var(--text-secondary);margin-bottom:0.4rem;">📖 Vocabulary from this text</h4>' +
             '<div style="display:flex;flex-wrap:wrap;gap:0.3rem;">' +
-              p.vocabulary.map(function (v) { return '<span style="font-size:0.8rem;background:var(--slate-100);padding:0.15rem 0.5rem;border-radius:4px;"><strong>' + v.word + '</strong> = ' + correctableMalagasy('reading:' + p.id + ':vocab:' + v.word, v.mg, 'Reading vocabulary', v.word) + '</span>'; }).join('') +
+              p.vocabulary.map(function (v) { return '<span style="font-size:0.8rem;background:var(--slate-100);padding:0.15rem 0.5rem;border-radius:4px;"><strong>' + escapeHtml(v.word) + '</strong> = ' + correctableMalagasy('reading:' + p.id + ':vocab:' + v.word, v.mg, 'Reading vocabulary', v.word) + '</span>'; }).join('') +
             '</div></div>'
           : '') +
         '<div class="comprehension">' +
           '<h4>Comprehension Questions</h4>' +
           p.comprehension.map(function (c, i) {
             return '<div class="comp-question">' +
-              '<div class="q">' + (i + 1) + '. ' + c.question + '</div>' +
+              '<div class="q">' + (i + 1) + '. ' + escapeHtml(c.question) + '</div>' +
               '<div class="comp-answer-form">' +
                 '<input class="comp-response" data-id="' + p.id + '" data-idx="' + i + '" aria-label="Your answer to question ' + (i + 1) + '" placeholder="Write a short answer…" />' +
                 '<button class="btn btn-outline btn-sm check-answer-btn" data-id="' + p.id + '" data-idx="' + i + '">Check</button>' +
               '</div>' +
               '<div class="comp-feedback" id="feedback-' + p.id + '-' + i + '" role="status" aria-live="polite"></div>' +
-              '<div class="a" id="ans-' + p.id + '-' + i + '"><strong>Suggested answer:</strong> ' + c.answer + '</div>' +
+              '<div class="a" id="ans-' + p.id + '-' + i + '"><strong>Suggested answer:</strong> ' + escapeHtml(c.answer) + '</div>' +
             '</div>';
           }).join('') +
         '</div>' +
+        '<div class="item-stepper-footer">' +
+          (prevPassage
+            ? '<button type="button" class="btn btn-outline btn-sm item-nav-prev" data-nav-reading="' + prevPassage.id + '">‹ Previous: ' + escapeHtml(prevPassage.title) + '</button>'
+            : '') +
+          (nextPassage
+            ? '<button type="button" class="btn btn-primary btn-sm item-nav-next" data-nav-reading="' + nextPassage.id + '">Next text: ' + escapeHtml(nextPassage.title) + ' ›</button>'
+            : '') +
+        '</div>' +
       '</div>';
+
+    content.querySelectorAll('[data-nav-reading]').forEach(function (button) {
+      button.addEventListener('click', function () {
+        state.readingId = button.dataset.navReading;
+        renderReading();
+        var scroller = $('contentScroll');
+        if (scroller) scroller.scrollTop = 0;
+      });
+    });
 
     content.querySelectorAll('.check-answer-btn').forEach(function (btn) {
       btn.addEventListener('click', function () {
@@ -2056,30 +2302,61 @@
   }
 
   function showConversation(id) {
-    var conv = CONVERSATIONS.find(function (c) { return c.id === id; });
+    var availableConversations = levelFiltered(CONVERSATIONS, function (conversation) { return conversation.level; });
+    var conv = availableConversations.find(function (c) { return c.id === id; }) || CONVERSATIONS.find(function (c) { return c.id === id; });
     if (!conv) return;
     var detail = $('convDetail');
 
+    var currentIdx = availableConversations.indexOf(conv);
+    var prevConv = currentIdx > 0 ? availableConversations[currentIdx - 1] : null;
+    var nextConv = currentIdx < availableConversations.length - 1 ? availableConversations[currentIdx + 1] : null;
+
     detail.innerHTML =
-      '<h3>' + conv.title + ' <span style="font-size:0.85rem;color:var(--text-secondary);font-weight:400;">(' + conv.level + ')</span></h3>' +
+      '<div class="item-stepper-bar">' +
+        (prevConv
+          ? '<button type="button" class="btn btn-outline btn-sm item-nav-prev" data-nav-conv="' + prevConv.id + '">‹ Prev: ' + escapeHtml(prevConv.title) + '</button>'
+          : '<button type="button" class="btn btn-ghost btn-sm" disabled>‹ First conversation</button>') +
+        '<span class="item-stepper-count">Dialogue ' + (currentIdx + 1) + ' of ' + availableConversations.length + ' (' + escapeHtml(conv.level) + ')</span>' +
+        (nextConv
+          ? '<button type="button" class="btn btn-outline btn-sm item-nav-next" data-nav-conv="' + nextConv.id + '">Next: ' + escapeHtml(nextConv.title) + ' ›</button>'
+          : '<button type="button" class="btn btn-ghost btn-sm" disabled>Last dialogue ›</button>') +
+      '</div>' +
+      '<h3>' + escapeHtml(conv.title) + ' <span style="font-size:0.85rem;color:var(--text-secondary);font-weight:400;">(' + escapeHtml(conv.level) + ')</span></h3>' +
       '<div style="margin-bottom:0.8rem;">' +
         '<button class="btn btn-ghost btn-sm" id="convSpeakAll">🔊 Play all</button>' +
-        '<span style="font-size:0.8rem;color:var(--text-secondary);margin-left:0.6rem;">Topic: ' + conv.topic + '</span>' +
+        '<span style="font-size:0.8rem;color:var(--text-secondary);margin-left:0.6rem;">Topic: ' + escapeHtml(conv.topic) + '</span>' +
       '</div>' +
        conv.lines.map(function (l, i) {
         var badgeClass = l.speaker === 'A' ? 'a' : 'b';
         return '<div class="conv-line">' +
-          '<span class="speaker-badge ' + badgeClass + '">' + l.speaker + '</span>' +
+          '<span class="speaker-badge ' + badgeClass + '">' + escapeHtml(l.speaker) + '</span>' +
           '<div>' +
-            '<div class="conv-en">' + l.en + '</div>' +
+            '<div class="conv-en">' + escapeHtml(l.en) + '</div>' +
              '<div class="conv-mg">' + correctableMalagasy('conversation:' + conv.id + ':' + i, l.mg, 'Conversation line', l.en) + '</div>' +
           '</div>' +
           '<button class="speak-btn" data-text="' + l.en.replace(/"/g, '&quot;') + '" aria-label="Listen to: ' + l.en.replace(/"/g, '&quot;') + '" title="Listen">🔊</button>' +
         '</div>';
       }).join('') +
       (conv.notes && conv.notes.length > 0
-        ? '<div class="conv-notes"><h5>💡 Language Notes</h5><ul>' + conv.notes.map(function (n) { return '<li>' + n + '</li>'; }).join('') + '</ul></div>'
-        : '');
+        ? '<div class="conv-notes"><h5>💡 Language Notes</h5><ul>' + conv.notes.map(function (n) { return '<li>' + escapeHtml(n) + '</li>'; }).join('') + '</ul></div>'
+        : '') +
+      '<div class="item-stepper-footer">' +
+        (prevConv
+          ? '<button type="button" class="btn btn-outline btn-sm item-nav-prev" data-nav-conv="' + prevConv.id + '">‹ Previous: ' + escapeHtml(prevConv.title) + '</button>'
+          : '') +
+        (nextConv
+          ? '<button type="button" class="btn btn-primary btn-sm item-nav-next" data-nav-conv="' + nextConv.id + '">Next conversation: ' + escapeHtml(nextConv.title) + ' ›</button>'
+          : '') +
+      '</div>';
+
+    detail.querySelectorAll('[data-nav-conv]').forEach(function (button) {
+      button.addEventListener('click', function () {
+        state.convId = button.dataset.navConv;
+        renderConversations();
+        var scroller = $('contentScroll');
+        if (scroller) scroller.scrollTop = 0;
+      });
+    });
 
     detail.querySelectorAll('.speak-btn').forEach(function (btn) {
       btn.addEventListener('click', function () {
@@ -2114,13 +2391,27 @@
   }
 
   function showWritingExercise(id) {
-    var w = WRITING_EXERCISES.find(function (ex) { return ex.id === id; });
+    var availableExercises = levelFiltered(WRITING_EXERCISES, function (exercise) { return exercise.level; });
+    var w = availableExercises.find(function (ex) { return ex.id === id; }) || WRITING_EXERCISES.find(function (ex) { return ex.id === id; });
     if (!w) return;
     var content = $('writingContent');
 
+    var currentIdx = availableExercises.indexOf(w);
+    var prevExercise = currentIdx > 0 ? availableExercises[currentIdx - 1] : null;
+    var nextExercise = currentIdx < availableExercises.length - 1 ? availableExercises[currentIdx + 1] : null;
+
     content.innerHTML =
       '<div class="writing-exercise">' +
-        '<h3>' + w.title + ' <span style="font-size:0.8rem;color:var(--text-secondary);font-weight:400;">(' + w.level + ')</span></h3>' +
+        '<div class="item-stepper-bar">' +
+          (prevExercise
+            ? '<button type="button" class="btn btn-outline btn-sm item-nav-prev" data-nav-writing="' + prevExercise.id + '">‹ Prev: ' + escapeHtml(prevExercise.title) + '</button>'
+            : '<button type="button" class="btn btn-ghost btn-sm" disabled>‹ First exercise</button>') +
+          '<span class="item-stepper-count">Writing ' + (currentIdx + 1) + ' of ' + availableExercises.length + ' (' + escapeHtml(w.level) + ')</span>' +
+          (nextExercise
+            ? '<button type="button" class="btn btn-outline btn-sm item-nav-next" data-nav-writing="' + nextExercise.id + '">Next: ' + escapeHtml(nextExercise.title) + ' ›</button>'
+            : '<button type="button" class="btn btn-ghost btn-sm" disabled>Last exercise ›</button>') +
+        '</div>' +
+        '<h3>' + escapeHtml(w.title) + ' <span style="font-size:0.8rem;color:var(--text-secondary);font-weight:400;">(' + escapeHtml(w.level) + ')</span></h3>' +
         '<div class="instr">' + w.instructions + '</div>' +
         '<h4 style="color:var(--text-secondary);font-size:0.85rem;margin-bottom:0.3rem;">✍️ Model</h4>' +
         '<div class="model-box">' + w.model + '</div>' +
@@ -2135,7 +2426,24 @@
         '</div>' +
         '<div class="writing-feedback" id="writingFeedback" role="status" aria-live="polite"></div>' +
         (w.tips ? '<div class="tips-box">' + w.tips + '</div>' : '') +
+        '<div class="item-stepper-footer">' +
+          (prevExercise
+            ? '<button type="button" class="btn btn-outline btn-sm item-nav-prev" data-nav-writing="' + prevExercise.id + '">‹ Previous: ' + escapeHtml(prevExercise.title) + '</button>'
+            : '') +
+          (nextExercise
+            ? '<button type="button" class="btn btn-primary btn-sm item-nav-next" data-nav-writing="' + nextExercise.id + '">Next exercise: ' + escapeHtml(nextExercise.title) + ' ›</button>'
+            : '') +
+        '</div>' +
       '</div>';
+
+    content.querySelectorAll('[data-nav-writing]').forEach(function (button) {
+      button.addEventListener('click', function () {
+        state.writingId = button.dataset.navWriting;
+        renderWriting();
+        var scroller = $('contentScroll');
+        if (scroller) scroller.scrollTop = 0;
+      });
+    });
 
     var response = $('writingResponse');
     response.value = state.progress.writingDrafts[w.id] || '';
