@@ -91,7 +91,7 @@ re-run; only missing verses are fetched.
 The standalone web app lives in `app/` and does not need a build step.
 
 ```bash
-python3 -m http.server 8788 --directory "/Users/tianaalbert/ENGLISH PREPARATIONS/app"
+cd app && python3 -m http.server 8788
 ```
 
 Open `http://localhost:8788/` in a browser.
@@ -162,6 +162,38 @@ To regenerate the platform icons after editing the SVG (macOS): render the SVG
 with QuickLook, then use `sips`/`iconutil`/ImageMagick. The generated files are
 already committed.
 
+## British & American English mini-app
+
+A small standalone vocabulary trainer focused on British vs American English
+differences lives in `br-am-webapp/`. It is self-contained and independent of
+the main app. To try it:
+
+```bash
+cd br-am-webapp && python3 -m http.server 8789
+```
+
+## Development
+
+Run the project's checks from the repository root:
+
+```bash
+npm test    # syntax-check all JS, validate vocabulary IDs and SW cache list
+npm start   # serve the web app at http://localhost:8788/
+```
+
+See [CONTRIBUTING.md](CONTRIBUTING.md) for the full development workflow.
+
+## Live demo (GitHub Pages)
+
+The `app/` directory is deployed to GitHub Pages so anyone can try Easy English
+without installing anything, at:
+
+```
+https://tianabizna-ctrl.github.io/english-preparations/
+```
+
+See `.github/workflows/pages.yml` for the deployment workflow.
+
 ## Notes
 
 - Progress (stars, streaks, learned words) is stored on the device in
@@ -169,3 +201,8 @@ already committed.
 - Speech **text-to-speech** works on the web, desktop and Android. Speech
   **recognition** (the Speaking screen) needs a browser with the Web Speech API
   (Chrome/Edge) and is not available in the Android WebView or Electron.
+
+## License
+
+This project is licensed under the MIT License — see the [LICENSE](LICENSE) file
+for details.
