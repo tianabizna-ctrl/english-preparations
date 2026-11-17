@@ -1,1 +1,26 @@
-RESTORING_FULL_FILE
+const VOCABULARY = [
+  {
+    id: 'greet-1',
+    category: 'Greetings',
+    categoryMg: 'Fiarahabana',
+    word: 'hello',
+    phonetic: 'heh-LOH',
+    malagasy: 'salama / manao ahoana',
+    example: 'Hello, how are you?',
+    british: true,
+    usNote: null,
+    emoji: '👋',
+  },
+  {
+    id: 'greet-2',
+    category: 'Greetings',
+    categoryMg: 'Fiarahabana',
+    word: 'goodbye',
+    phonetic: 'gud-BYE',
+    malagasy: 'veloma / tsara be',
+    example: 'Goodbye, see you tomorrow.',
+    british: true,
+    usNote: null,
+    emoji: '👋',
+  },
+];
