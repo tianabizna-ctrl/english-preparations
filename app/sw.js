@@ -5,7 +5,7 @@
    modern browser). Static, same-origin files are cached cache-first; requests
    to other origins (for example Google Fonts) are passed straight through.
    ═══════════════════════════════════════════════════════════════════════ */
-var CACHE_NAME = 'easy-english-v17';
+var CACHE_NAME = 'easy-english-v18';
 
 var APP_SHELL = [
   './',
